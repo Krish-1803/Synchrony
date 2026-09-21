@@ -19,7 +19,11 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./backend/src/main/resources/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      # schema.sql is the canonical reference migration. It is not mounted into
+      # init, because the backend owns schema creation: Hibernate builds the
+      # relational tables and the vector service creates the pgvector extension,
+      # the feature_embedding table and its HNSW index. Mounting it here as well
+      # would double-manage the schema and cause Hibernate ALTER churn.
     healthcheck:
       # Check over TCP (-h 127.0.0.1), not the Unix socket. During the init-script
       # phase Postgres listens on the socket only, so a socket check reports ready

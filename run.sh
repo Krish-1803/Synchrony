@@ -30,14 +30,28 @@ for _ in $(seq 1 120); do
   sleep 2
 done
 
-# 4. Verify a demo login end to end.
+# 4. Verify a demo login directly against the backend.
 if curl -s -X POST http://localhost:8080/api/auth/login \
       -H 'Content-Type: application/json' \
       -d '{"username":"officer","password":"Officer#2024"}' | grep -q token; then
-  echo "Login check passed."
+  echo "Backend login check passed."
 else
-  echo "Login check not passing yet. The seed may still be running."
+  echo "Backend login not passing yet. The seed may still be running."
   echo "Follow it with: docker compose logs -f backend"
+fi
+
+# 5. Verify the same login through the frontend proxy (the path the browser uses).
+for _ in $(seq 1 30); do
+  code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8081/ || true)
+  if [ "$code" = "200" ]; then break; fi
+  sleep 2
+done
+if curl -s -X POST http://localhost:8081/api/auth/login \
+      -H 'Content-Type: application/json' \
+      -d '{"username":"officer","password":"Officer#2024"}' | grep -q token; then
+  echo "Frontend proxy login check passed. The browser login will work."
+else
+  echo "Frontend cannot reach the backend yet. Check: docker compose logs frontend"
 fi
 
 cat <<'INFO'
