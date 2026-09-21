@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:synchrony;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+
+synchrony:
+  security:
+    jwt:
+      secret: test-secret-key-for-local-tests-only-1234567890
+      expiration-minutes: 60
+  bedrock:
+    enabled: false
+  seed:
+    enabled: false

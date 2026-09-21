@@ -1,0 +1,56 @@
+# Synchrony Dynamic Risk Assessment - local orchestration.
+#
+# Quick start:
+#   1. Copy .env.example to .env and set JWT_SECRET (32 bytes or more).
+#   2a. Database only (run backend and frontend locally):  docker compose up -d db
+#   2b. Full stack in containers:                          docker compose up --build
+#
+# The database image ships with pgvector. The schema is applied on first start
+# from backend/src/main/resources/db/schema.sql.
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-synchrony}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-synchrony}
+      POSTGRES_DB: ${DB_NAME:-synchrony}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/src/main/resources/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-synchrony} -d ${DB_NAME:-synchrony}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-synchrony}
+      DB_USERNAME: ${DB_USERNAME:-synchrony}
+      DB_PASSWORD: ${DB_PASSWORD:-synchrony}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in your .env file}
+      CORS_ALLOWED_ORIGINS: http://localhost:8081
+      BEDROCK_ENABLED: ${BEDROCK_ENABLED:-false}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      BEDROCK_MODEL_ID: ${BEDROCK_MODEL_ID:-anthropic.claude-3-5-sonnet-20240620-v1:0}
+      SEED_OFFICER_PASSWORD: ${SEED_OFFICER_PASSWORD:-Officer#2024}
+      SEED_APPLICANT_PASSWORD: ${SEED_APPLICANT_PASSWORD:-Applicant#2024}
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "8081:80"
+
+volumes:
+  pgdata:
