@@ -1,0 +1,29 @@
+# Environment
+.env
+*.env.local
+
+# Java / Maven
+backend/target/
+*.class
+
+# Node / Vite
+frontend/node_modules/
+frontend/dist/
+npm-debug.log*
+
+# Logs
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.settings/
+.project
+.classpath
+
+# OS
+.DS_Store
+
+# Local database volume
+pgdata/
