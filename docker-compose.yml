@@ -21,10 +21,14 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./backend/src/main/resources/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-synchrony} -d ${DB_NAME:-synchrony}"]
+      # Check over TCP (-h 127.0.0.1), not the Unix socket. During the init-script
+      # phase Postgres listens on the socket only, so a socket check reports ready
+      # too early and the backend races the database. A TCP check is accurate.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U ${DB_USERNAME:-synchrony} -d ${DB_NAME:-synchrony}"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 20
+      start_period: 30s
 
   backend:
     build: ./backend
