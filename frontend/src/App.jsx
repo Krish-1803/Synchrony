@@ -14,10 +14,24 @@ function DemoGate({ role, children }) {
 
   useEffect(() => {
     let active = true;
+    let attempts = 0;
     setStatus('loading');
-    demoLogin(role)
-      .then(() => active && setStatus('ready'))
-      .catch(() => active && setStatus('error'));
+    // Retry while the backend finishes its first-boot, so opening the app never
+    // needs a manual reload.
+    const attempt = () => {
+      demoLogin(role)
+        .then(() => active && setStatus('ready'))
+        .catch(() => {
+          if (!active) return;
+          attempts += 1;
+          if (attempts >= 60) {
+            setStatus('error');
+          } else {
+            setTimeout(attempt, 2000);
+          }
+        });
+    };
+    attempt();
     return () => {
       active = false;
     };
@@ -27,15 +41,22 @@ function DemoGate({ role, children }) {
     return (
       <div className="auth-shell">
         <div className="auth-card">
-          <h2>Cannot reach the service</h2>
-          <p className="muted">The backend is not responding yet. Wait for it to finish starting then reload.</p>
-          <button className="btn" onClick={() => window.location.reload()}>Reload</button>
+          <h2>Still starting</h2>
+          <p className="muted">The service is taking longer than usual. It will connect automatically.</p>
+          <button className="btn" onClick={() => window.location.reload()}>Reload now</button>
         </div>
       </div>
     );
   }
   if (status !== 'ready') {
-    return <div className="auth-shell"><div className="auth-card">Entering...</div></div>;
+    return (
+      <div className="auth-shell">
+        <div className="auth-card">
+          <h2>Starting the service</h2>
+          <p className="muted">Connecting to the underwriting engine. This can take a moment on first launch.</p>
+        </div>
+      </div>
+    );
   }
   return (
     <>

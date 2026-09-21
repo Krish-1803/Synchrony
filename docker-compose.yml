@@ -40,10 +40,13 @@ services:
       db:
         condition: service_healthy
     environment:
+      DB_HOST: db
+      DB_PORT: "5432"
       DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-synchrony}
       DB_USERNAME: ${DB_USERNAME:-synchrony}
       DB_PASSWORD: ${DB_PASSWORD:-synchrony}
-      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in your .env file}
+      # A demo default so the stack runs with no setup. Override in .env for production.
+      JWT_SECRET: ${JWT_SECRET:-synchrony-local-demo-secret-key-change-in-production-0123456789}
       CORS_ALLOWED_ORIGINS: http://localhost:8081
       BEDROCK_ENABLED: ${BEDROCK_ENABLED:-false}
       AWS_REGION: ${AWS_REGION:-us-east-1}
