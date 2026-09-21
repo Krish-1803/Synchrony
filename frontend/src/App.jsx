@@ -1,48 +1,69 @@
+import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext.jsx';
 import TopBar from './components/TopBar.jsx';
-import LoginPage from './pages/LoginPage.jsx';
-import RegisterPage from './pages/RegisterPage.jsx';
+import LandingPage from './pages/LandingPage.jsx';
 import ApplicantPortal from './pages/ApplicantPortal.jsx';
 import UnderwritingDashboard from './pages/UnderwritingDashboard.jsx';
 
-function Home() {
-  const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
-  return <Navigate to={user.role === 'CREDIT_OFFICER' ? '/underwriting' : '/portal'} replace />;
-}
+// Auto-authenticates as the demo account for the given role, then renders the
+// portal. This replaces the login screen so both portals open directly.
+function DemoGate({ role, children }) {
+  const { demoLogin } = useAuth();
+  const [status, setStatus] = useState('loading');
 
-function Protected({ role, children }) {
-  const { user, loading } = useAuth();
-  if (loading) return <div className="container">Loading...</div>;
-  if (!user) return <Navigate to="/login" replace />;
-  if (role && user.role !== role) return <Navigate to="/" replace />;
-  return children;
+  useEffect(() => {
+    let active = true;
+    setStatus('loading');
+    demoLogin(role)
+      .then(() => active && setStatus('ready'))
+      .catch(() => active && setStatus('error'));
+    return () => {
+      active = false;
+    };
+  }, [role, demoLogin]);
+
+  if (status === 'error') {
+    return (
+      <div className="auth-shell">
+        <div className="auth-card">
+          <h2>Cannot reach the service</h2>
+          <p className="muted">The backend is not responding yet. Wait for it to finish starting then reload.</p>
+          <button className="btn" onClick={() => window.location.reload()}>Reload</button>
+        </div>
+      </div>
+    );
+  }
+  if (status !== 'ready') {
+    return <div className="auth-shell"><div className="auth-card">Entering...</div></div>;
+  }
+  return (
+    <>
+      <TopBar />
+      {children}
+    </>
+  );
 }
 
 export default function App() {
-  const { user } = useAuth();
   return (
     <>
-      {user && <TopBar />}
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/" element={<LandingPage />} />
         <Route
           path="/portal"
           element={
-            <Protected role="APPLICANT">
+            <DemoGate role="APPLICANT">
               <ApplicantPortal />
-            </Protected>
+            </DemoGate>
           }
         />
         <Route
           path="/underwriting"
           element={
-            <Protected role="CREDIT_OFFICER">
+            <DemoGate role="CREDIT_OFFICER">
               <UnderwritingDashboard />
-            </Protected>
+            </DemoGate>
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />

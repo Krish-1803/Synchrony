@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import api, { setToken, getToken } from '../api/client.js';
+import { DEMO_ACCOUNTS } from './demo.js';
 
 const AuthContext = createContext(null);
 
@@ -35,6 +36,22 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  /**
+   * Auto-authenticate as the demo account for a role. Used to open the portals
+   * directly without a login screen. If the current session is already that
+   * role, it is reused.
+   */
+  const demoLogin = async (role) => {
+    if (user && user.role === role && getToken()) {
+      return user;
+    }
+    const creds = DEMO_ACCOUNTS[role];
+    if (!creds) {
+      throw new Error(`No demo account for role ${role}`);
+    }
+    return login(creds.username, creds.password);
+  };
+
   const register = async (payload) => {
     const { data } = await api.post('/api/auth/register', payload);
     setToken(data.token);
@@ -48,7 +65,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, demoLogin, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
