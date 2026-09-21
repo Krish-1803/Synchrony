@@ -193,6 +193,21 @@ auditors can reproduce and verify any historical decision.
 
 ---
 
+## Quick start
+
+With Docker installed, one command builds and runs everything, waits for the
+backend and verifies a demo login:
+
+```bash
+./run.sh
+```
+
+Then open **http://localhost:8081** (in a Codespace, open the forwarded port
+8081). Sign in with `officer` / `Officer#2024` or `maria` / `Applicant#2024`.
+Stop with `docker compose down` (add `-v` to reset the database).
+
+The rest of this section covers the manual setup and running the pieces locally.
+
 ## Local setup
 
 ### Prerequisites
@@ -246,11 +261,14 @@ Open http://localhost:5173. The dev server proxies API calls to the backend.
 ### Full stack in containers
 
 ```bash
-docker compose up --build
+docker compose up -d --build
 ```
 
-Frontend on http://localhost:8081, backend on http://localhost:8080, database on
-5432. Requires JWT_SECRET in your .env file.
+Run detached (`-d`) so the stack keeps running after the command returns. If you
+run it in the foreground, pressing Ctrl+C stops every container. Frontend on
+http://localhost:8081, backend on http://localhost:8080, database on 5432.
+Requires JWT_SECRET in your .env file. Follow startup with
+`docker compose logs -f backend` and wait for `Started InclusionApplication`.
 
 ---
 
