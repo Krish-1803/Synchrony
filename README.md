@@ -195,8 +195,18 @@ auditors can reproduce and verify any historical decision.
 
 ## Quick start
 
-With Docker installed, one command builds and runs everything, waits for the
-backend and verifies a demo login:
+### In a Codespace (no commands)
+
+The repository ships a dev container. It builds the images when the Codespace is
+created and starts the whole stack automatically every time the Codespace opens,
+then forwards and previews the app on port 8081. Open the Codespace and wait for
+it to finish the first build. After that it is already running on each launch,
+with no commands and no login.
+
+### Anywhere with Docker
+
+One command builds and runs everything, waits for the backend and verifies a
+demo login:
 
 ```bash
 ./run.sh

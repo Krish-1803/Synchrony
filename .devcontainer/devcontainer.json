@@ -1,0 +1,16 @@
+{
+  "name": "Synchrony Dynamic Risk Assessment",
+  "image": "mcr.microsoft.com/devcontainers/universal:2-linux",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "forwardPorts": [8081, 8080, 5432],
+  "portsAttributes": {
+    "8081": { "label": "Synchrony App", "onAutoForward": "openPreview" },
+    "8080": { "label": "Backend API", "onAutoForward": "silent" },
+    "5432": { "label": "PostgreSQL", "onAutoForward": "silent" }
+  },
+  "onCreateCommand": "docker compose build",
+  "postStartCommand": "docker compose up -d",
+  "waitFor": "onCreateCommand"
+}
